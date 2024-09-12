@@ -1,3 +1,4 @@
+import 'package:converter/pages/splash_page.dart';
 import 'package:flutter/material.dart';
 import 'package:converter/pages/conversion.dart';
 
@@ -14,7 +15,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightGreen),
         useMaterial3: true,
       ),
-      home: const Conversion(),
+      home: const SplashPage(),
     );
   }
 }

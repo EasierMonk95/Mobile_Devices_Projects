@@ -25,14 +25,11 @@ Map<String, double> exchangeRates = {
 };
 
 class _ConversionState extends State<Conversion> {
-  // Operación matemática
-  double _coinResult = 0;
-  double _coinValue = 0;
 
   final _controller = TextEditingController();
   final _resultController = TextEditingController();
-  String dropdownValue = list.first;
-  String dropdownValue2 = list.first;
+  ValueNotifier<String> dropdownValue = ValueNotifier<String>(list.first);
+  ValueNotifier<String> dropdownValue2 = ValueNotifier<String>(list.first);
 
   @override
   void initState() {
@@ -42,18 +39,25 @@ class _ConversionState extends State<Conversion> {
     _controller.addListener(() {
       _updateResult();
     });
+
+    dropdownValue.addListener((){
+      _updateResult();
+    });
+
+    dropdownValue2.addListener((){
+      _updateResult();
+    });
   }
 
   // Actualiza el resultado en el segundo TextFormField
   void _updateResult() {
-    String resulted = '${dropdownValue}_$dropdownValue2';
+    String resulted = '${dropdownValue.value}_${dropdownValue2.value}';
 
     // Intenta convertir el texto ingresado a un número
     double? input = double.tryParse(_controller.text);
     // Si el número es válido, actualiza el resultado
     if (input != null) {
-      _resultController.text = (input * exchangeRates[resulted]!)
-          .toString(); // Ejemplo: Doble del valor
+      _resultController.text = (input * exchangeRates[resulted]!).toString(); // Ejemplo: Doble del valor
     } else {
       _resultController.clear(); // Limpia el campo si el input no es válido
     }
@@ -80,20 +84,26 @@ class _ConversionState extends State<Conversion> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                const Image(
+                  image: AssetImage('assets/icons/Exchange.png'),
+                  width: 300,
+                  height: 300,
+                ),
+                const SizedBox(height: 32.0),
                 Row(children: [
                   Expanded(
                     child: TextFormField(
                       controller: _controller,
                       keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Ingrese la cantidad de dinero',
                         border: OutlineInputBorder(),
                       ),
                     ),
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   DropdownButton(
-                      value: dropdownValue,
+                      value: dropdownValue.value,
                       icon: const Icon(Icons.arrow_circle_down_outlined),
                       elevation: 16,
                       style: const TextStyle(color: Colors.deepPurple),
@@ -104,7 +114,7 @@ class _ConversionState extends State<Conversion> {
                       onChanged: (String? value) {
                         // This is called when the user selects an item.
                         setState(() {
-                          dropdownValue = value!;
+                          dropdownValue.value = value!;
                         });
                       },
                       items: list.map<DropdownMenuItem<String>>((String value) {
@@ -114,21 +124,21 @@ class _ConversionState extends State<Conversion> {
                         );
                       }).toList()),
                 ]),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Row(
                   children: [
                     Expanded(
                         child: TextFormField(
                       controller: _resultController,
                       readOnly: true, // Campo de solo lectura
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Resultado',
                         border: OutlineInputBorder(),
                       ),
                     )),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     DropdownButton(
-                        value: dropdownValue2,
+                        value: dropdownValue2.value,
                         icon: const Icon(Icons.arrow_circle_down_outlined),
                         elevation: 16,
                         style: const TextStyle(color: Colors.deepPurple),
@@ -139,7 +149,7 @@ class _ConversionState extends State<Conversion> {
                         onChanged: (String? value) {
                           // This is called when the user selects an item.
                           setState(() {
-                            dropdownValue2 = value!;
+                            dropdownValue2.value = value!;
                           });
                         },
                         items:
