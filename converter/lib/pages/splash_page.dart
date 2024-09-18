@@ -1,5 +1,5 @@
-import 'package:converter/pages/conversion.dart';
 import 'package:flutter/material.dart';
+import 'navigation_bar_page.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -14,7 +14,7 @@ class _SplashPageState extends State<SplashPage> {
     Future.delayed(const Duration(seconds: 2), () async{
       Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const Conversion()));
+          MaterialPageRoute(builder: (context) => NavigationBarPage()));
     });
   }
 

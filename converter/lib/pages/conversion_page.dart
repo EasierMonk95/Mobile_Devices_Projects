@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class Conversion extends StatefulWidget {
-  const Conversion({super.key});
+class ConversionPage extends StatefulWidget {
+  const ConversionPage({super.key});
 
   @override
-  State<Conversion> createState() => _ConversionState();
+  State<ConversionPage> createState() => _ConversionPageState();
 }
 
 const List<String> list = <String>['USD', 'COP', 'EUR', 'GBP'];
@@ -24,7 +24,7 @@ Map<String, double> exchangeRates = {
   'COP_GBP': 0.00018
 };
 
-class _ConversionState extends State<Conversion> {
+class _ConversionPageState extends State<ConversionPage> {
 
   final _controller = TextEditingController();
   final _resultController = TextEditingController();
@@ -86,8 +86,8 @@ class _ConversionState extends State<Conversion> {
               children: [
                 const Image(
                   image: AssetImage('assets/icons/Exchange.png'),
-                  width: 300,
-                  height: 300,
+                  width: 200,
+                  height: 200,
                 ),
                 const SizedBox(height: 32.0),
                 Row(children: [
@@ -159,6 +159,8 @@ class _ConversionState extends State<Conversion> {
                             child: Text(value),
                           );
                         }).toList()),
+                    const SizedBox(width: 10),
+
                   ],
                 ),
               ],
