@@ -10,6 +10,8 @@ class ResistorPage extends StatefulWidget {
 class _ResistorPageState extends State<ResistorPage> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+
+    );
   }
 }

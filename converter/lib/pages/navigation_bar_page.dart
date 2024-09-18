@@ -16,11 +16,11 @@ class _NavigationBarPageState extends State<NavigationBarPage> {
 
   int _selectedIndex = 0;
 
-  static const List<Widget> _widgetOptions = <Widget> [
-    NotesPage(),
-    FreedomPage(),
-    ConversionPage(),
-    ResistorPage()
+  static List<Widget> _widgetOptions = <Widget> [
+    GradeCalculator(),
+    const FreedomPage(),
+    const ConversionPage(),
+    const ResistorPage()
   ];
 
   void _onItemTapped(int index){
@@ -32,9 +32,6 @@ class _NavigationBarPageState extends State<NavigationBarPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Mis Apps"),
-      ),
       body: Center(
         child: _widgetOptions.elementAt(_selectedIndex),
       ),
