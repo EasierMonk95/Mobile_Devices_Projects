@@ -20,7 +20,7 @@ class _NavigationBarPageState extends State<NavigationBarPage> {
     GradeCalculator(),
     const FreedomPage(),
     const ConversionPage(),
-    const ResistorPage()
+    ResistorPage()
   ];
 
   void _onItemTapped(int index){

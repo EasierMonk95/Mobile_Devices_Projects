@@ -48,7 +48,7 @@ class _GradeCalculatorState extends State<GradeCalculator> {
     }
   }
 
-  // Mostrar el resultado en un diálogo
+  // Mostrar el resultado en un diálogo.
   void _showResultDialog(double result) {
     showDialog(
       context: context,
