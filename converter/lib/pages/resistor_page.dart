@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 
 class ResistorPage extends StatefulWidget {
@@ -8,7 +7,6 @@ class ResistorPage extends StatefulWidget {
 }
 
 class _ResistorPageState extends State<ResistorPage> {
-
   // Controladores para almacenar valores de resistencia y colores
   List<int?> _resistorMultiplier = [];
 
@@ -36,33 +34,26 @@ class _ResistorPageState extends State<ResistorPage> {
     _addResistorField();
   }
 
-  // Función para agregar un nuevo campo de nota
   void _addResistorField() {
-    if(counter < 5){
+    if (counter < 5) {
       _resistorMultiplier.add(0); // Multiplicador predeterminado (0)
       counter++;
-    }
-    else{
+    } else {
       _showErrorDialog();
     }
-
     setState(() {});
   }
 
-  // Función para agregar un nuevo campo de nota
   void _removeResistorField() {
-    if(counter > 3){
+    if (counter > 3) {
       _resistorMultiplier.removeLast(); // Multiplicador predeterminado (0)
       counter--;
-    }
-    else{
+    } else {
       _showErrorDialog();
     }
-
     setState(() {});
   }
 
-  // Mostrar el resultado en un diálogo.
   void _showResultDialog(String result) {
     showDialog(
       context: context,
@@ -103,34 +94,23 @@ class _ResistorPageState extends State<ResistorPage> {
     );
   }
 
-  // Función para calcular la resistencia
   void _calculateResistor() {
-    // Verifica que al menos haya 3 bandas
     if (_resistorMultiplier.length < 3) {
       _showErrorDialog();
       return;
     }
 
-    // Toma los primeros 2 o 3 dígitos
     String digits = '';
     for (int i = 0; i < _resistorMultiplier.length - 1; i++) {
       digits += _resistorMultiplier[i].toString();
     }
 
-    // El último dígito representa el número de ceros
     int zeros = _resistorMultiplier.last!;
-
-    // Calcula el valor de la resistencia
     int resistanceValue = int.parse(digits) * (pow(10, zeros) as int);
-
-    // Convertir el valor a unidades (Ohmios, kiloOhmios, megaOhmios)
     String result = _convertToReadableUnit(resistanceValue);
-
-    // Mostrar el resultado
     _showResultDialog(result);
   }
 
-  // Función para convertir la resistencia en unidades legibles
   String _convertToReadableUnit(int value) {
     if (value >= 1000000) {
       return (value / 1000000).toStringAsFixed(2) + ' MΩ';
@@ -148,9 +128,10 @@ class _ResistorPageState extends State<ResistorPage> {
         title: Text('Calculadora de Resistencias'),
         backgroundColor: Colors.blueGrey,
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             const Image(
               image: AssetImage('assets/icons/resistor.png'),
@@ -159,66 +140,89 @@ class _ResistorPageState extends State<ResistorPage> {
             ),
             SizedBox(height: 20),
             Expanded(
-              child:
-                ListView.builder(
-                  itemCount: _resistorMultiplier.length,
-                  itemBuilder: (context, index){
-                    return Column(
-                      children : [
-                        DropdownButton<int>(
-                          value: _resistorMultiplier[index],
-                          items: _resistanceColors.map((resistor){
-                            return DropdownMenuItem<int>(
-                              value: resistor['value'],
-                              child: Row(
-                                children: [
-                                  // Barra de color
-                                  Container(
-                                    width: 30,
-                                    height: 30,
-                                    color: resistor['color'],
-                                  ),
-                                  SizedBox(width: 20), // Espacio entre el color y el texto
-                                  // Texto que muestra el valor de la resistencia
-                                  Text(
-                                    resistor['value'].toString(),
-                                    style: TextStyle(fontSize: 18),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (newValue) {
-                            setState(() {
-                              _resistorMultiplier[index] = newValue!;
-                            });
-                          },
-                        ),
-                      ]
-                    );
-                  }
+              child: ListView.builder(
+                itemCount: _resistorMultiplier.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10.0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: DropdownButton<int>(
+                        value: _resistorMultiplier[index],
+                        isExpanded: true, // Hacer que el DropdownButton sea más largo
+                        items: _resistanceColors.map((resistor) {
+                          return DropdownMenuItem<int>(
+                            value: resistor['value'],
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 30,
+                                  height: 30,
+                                  color: resistor['color'],
+                                ),
+                                SizedBox(width: 20),
+                                Text(
+                                  resistor['value'].toString(),
+                                  style: TextStyle(fontSize: 18),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (newValue) {
+                          setState(() {
+                            _resistorMultiplier[index] = newValue!;
+                          });
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: _addResistorField,
+                  child: Text('Agregar banda'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  ),
                 ),
+                ElevatedButton(
+                  onPressed: _removeResistorField,
+                  child: Text('Remover banda'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: 5),
+            SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _addResistorField,
-              child: Text('Agregar banda'),
-            ),
-            SizedBox(height: 5,),
-            ElevatedButton(
-              onPressed: _removeResistorField,
-              child: Text('Remover banda'),
-            ),
-            SizedBox(height: 5,),
-            ElevatedButton(
-                onPressed: _calculateResistor,
-                child: Text("Calcular resistencia")
+              onPressed: _calculateResistor,
+              child: Text("Calcular resistencia"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+              ),
             ),
           ],
         ),
-
       ),
     );
   }
 }
-
