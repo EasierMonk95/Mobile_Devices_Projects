@@ -1,5 +1,5 @@
 import 'package:converter/pages/conversion_page.dart';
-import 'package:converter/pages/freedom_page.dart';
+import 'package:converter/pages/todo_list.dart';
 import 'package:converter/pages/notes_page.dart';
 import 'package:converter/pages/resistor_page.dart';
 import 'package:flutter/material.dart';
@@ -18,9 +18,9 @@ class _NavigationBarPageState extends State<NavigationBarPage> {
 
   static List<Widget> _widgetOptions = <Widget> [
     GradeCalculator(),
-    const FreedomPage(),
+    const TodoList(),
     const ConversionPage(),
-    const ResistorPage()
+    ResistorPage()
   ];
 
   void _onItemTapped(int index){
