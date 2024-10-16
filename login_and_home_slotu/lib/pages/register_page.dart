@@ -25,7 +25,7 @@ class _RegisterPageState extends State<RegisterPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image(
-                  image: AssetImage('assets/imagenes/usuario.png'),
+                  image: AssetImage('assets/images/usuario.png'),
                   width: 150,  // Cambia el ancho según tus necesidades
                   height: 150, // Cambia la altura según tus necesidades
                   fit: BoxFit.cover,
@@ -117,7 +117,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   height: 6.0,
                 ),
                 Image(
-                  image: AssetImage('assets/imagenes/registrarseblanco.png'),
+                  image: AssetImage('assets/images/registrarseblanco.png'),
                   width: 100,  // Cambia el ancho según tus necesidades
                   height: 100, // Cambia la altura según tus necesidades
                   fit: BoxFit.cover,
