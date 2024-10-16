@@ -1,4 +1,5 @@
 import 'package:converter/pages/conversion_page.dart';
+import 'package:converter/pages/per_circ_screen.dart';
 import 'package:converter/pages/todo_list.dart';
 import 'package:converter/pages/notes_page.dart';
 import 'package:converter/pages/resistor_page.dart';
@@ -20,7 +21,7 @@ class _NavigationBarPageState extends State<NavigationBarPage> {
     GradeCalculator(),
     const TodoList(),
     const ConversionPage(),
-    ResistorPage()
+    PerCircScreen()
   ];
 
   void _onItemTapped(int index){
