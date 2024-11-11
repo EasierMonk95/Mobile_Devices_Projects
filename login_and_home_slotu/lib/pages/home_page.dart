@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:login_and_home_slotu/pages/cnc_page.dart';
+import 'package:login_and_home_slotu/pages/computer_page.dart';
+import 'package:login_and_home_slotu/pages/profile_page.dart';
+import 'package:login_and_home_slotu/pages/soldadura_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -46,10 +50,10 @@ class _HomePageState extends State<HomePage> {
         ),
         body: const TabBarView(
           children: [
-            Center(child: Text('Soldadura')),
-            Center(child: Text('Computadores')),
-            Center(child: Text('CNC')),
-            Center(child: Text('Foro')),
+            CncPage(),
+            ComputerPage(),
+            SoldaduraPage(),
+            ProfilePage(),
           ],
         ),
       ),
