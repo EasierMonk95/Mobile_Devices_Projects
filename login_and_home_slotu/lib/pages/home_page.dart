@@ -22,7 +22,7 @@ class _HomePageState extends State<HomePage> {
           backgroundColor: Color(0xFF004B28),
           bottom: const TabBar(
             tabs: [
-              Tab(icon: Icon(Icons.edit_attributes_rounded, color: Colors.white,),
+              Tab(icon: Icon(Icons.biotech, color: Colors.white,),
                 child: Text(
                   'Soldadura',
                   style: TextStyle(color: Colors.white),  // Color blanco para el texto
@@ -48,11 +48,11 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ),
-        body: const TabBarView(
+        body: TabBarView(
           children: [
+            SoldaduraPage(),
             CncPage(),
             ComputerPage(),
-            SoldaduraPage(),
             ProfilePage(),
           ],
         ),

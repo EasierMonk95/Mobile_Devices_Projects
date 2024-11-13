@@ -87,22 +87,24 @@ class _LoginPageState extends State<LoginPage> {
                 TextFormField(
                   controller: _password,
                   keyboardType: TextInputType.visiblePassword,
+                  obscureText: _isPasswordObscure, // Añade esta línea
                   decoration: InputDecoration(
                     labelText: "Digite su contraseña",
                     labelStyle: const TextStyle(
                       color: Colors.white, // Cambia el color del texto del label
                       fontSize: 16, // Ajusta el tamaño de la fuente
-                    ),// Fondo suave detrás del campo de texto
+                    ),
                     prefixIcon: Icon(Icons.lock),
                     suffixIcon: IconButton(
-                        icon: Icon(_isPasswordObscure
-                            ? Icons.visibility
-                            : Icons.visibility_off),
-                        onPressed: () {
-                          setState(() {
-                            _isPasswordObscure = !_isPasswordObscure;
-                          });
-                        }),
+                      icon: Icon(
+                        _isPasswordObscure ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordObscure = !_isPasswordObscure;
+                        });
+                      },
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16), // Bordes redondeados
                       borderSide: const BorderSide(
