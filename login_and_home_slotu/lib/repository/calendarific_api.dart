@@ -1,10 +1,4 @@
 import 'dart:convert';
-
-import 'package:login_and_home_slotu/models/api_calendarific_2024_response.dart';
-import 'package:login_and_home_slotu/models/api_calendarific_2025_response.dart';
-import 'package:http/http.dart' as http;
-
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class CalendarificApi2024 {

@@ -51,6 +51,7 @@ dependencies:
   firebase_analytics: ^11.3.3
   firebase_performance: ^0.10.0+8
   firebase_storage: ^12.3.3
+  hive_flutter: ^1.1.0
 
 dev_dependencies:
   flutter_test:
