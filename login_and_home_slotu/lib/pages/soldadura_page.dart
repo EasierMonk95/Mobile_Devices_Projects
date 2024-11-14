@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:login_and_home_slotu/models/api_calendarific_2024_response.dart';
 import 'package:login_and_home_slotu/repository/calendarific_api.dart';
 
-import '../repository/calendarific_api.dart';
+import '../models/event_model.dart';
 
 class SoldaduraPage extends StatefulWidget {
+  final List<Map<String, dynamic>> reservations;
+
+  SoldaduraPage({Key? key, required this.reservations}) : super(key: key);
+
   @override
   _SoldaduraPageState createState() => _SoldaduraPageState();
 }
@@ -22,6 +27,7 @@ class _SoldaduraPageState extends State<SoldaduraPage> {
     "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"
   ];
 
+  Box<Event> reservationBox = Hive.box<Event>('reservations');
 
   @override
   void initState() {
@@ -57,9 +63,57 @@ class _SoldaduraPageState extends State<SoldaduraPage> {
   void _onDayTap(DateTime date, String hour) {
     if (_isHoliday(date)) {
       _showHolidayNotification(date);
+    } else if (_isReserved(date, hour)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Este horario ya está reservado.")),
+      );
     } else {
-      _showAddEventDialog(context, date, hour);
+      _showReservationDialog(context, date, hour);
     }
+  }
+
+  bool _isReserved(DateTime date, String hour) {
+    return reservationBox.values.any((reservation) =>
+      reservation.date.year == date.year &&
+      reservation.date.month == date.month &&
+      reservation.date.day == date.day &&
+      reservation.hour == hour
+      );
+  }
+
+  void _showReservationDialog(BuildContext context, DateTime date, String hour) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("¿Quieres reservar este equipo?"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("Fecha: ${DateFormat('EEE, dd MMM', 'es').format(date)}"),
+              Text("Hora: $hour"),
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: Text("No"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text("Sí"),
+              onPressed: () {
+                setState(() {
+                  reservationBox.add(Event(date: date, hour: hour));
+                });
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showHolidayNotification(DateTime date) {
@@ -111,43 +165,6 @@ class _SoldaduraPageState extends State<SoldaduraPage> {
     );
   }
 
-  void _showAddEventDialog(BuildContext context, DateTime date, String hour) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Solicitar equipo"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text("Fecha: ${DateFormat('EEE, dd MMM', 'es').format(date)}"),
-              Text("Hora: $hour"),
-              TextField(
-                decoration: InputDecoration(labelText: "Título del Evento"),
-              ),
-              TextField(
-                decoration: InputDecoration(labelText: "Descripción"),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              child: Text("Cancelar"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text("Guardar"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -203,7 +220,9 @@ class _SoldaduraPageState extends State<SoldaduraPage> {
                           child: Container(
                             height: 60,
                             margin: EdgeInsets.all(2),
-                            color: _isHoliday(_weekDays[dayIndex]) ? Colors.red : Colors.grey[300],
+                            color: _isHoliday(_weekDays[dayIndex]) ? Colors.red
+                                : _isReserved(_weekDays[dayIndex], hours[hourIndex]) ? Colors.blue
+                                : Colors.grey[300],
                             child: Center(child: Text("")),
                           ),
                         ),
@@ -218,7 +237,7 @@ class _SoldaduraPageState extends State<SoldaduraPage> {
     );
   }
 
-// Método auxiliar para verificar si un día es festivo
+  // Método auxiliar para verificar si un día es festivo
   bool _isHoliday(DateTime day) {
     return _holidays2024.any((holiday) =>
     holiday.year == day.year &&

@@ -11,6 +11,7 @@ void main() async {
 
   await Hive.initFlutter();
   Hive.registerAdapter(EventAdapter());
+  await Hive.openBox<Event>('reservations');
   runApp(const MyApp());
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,

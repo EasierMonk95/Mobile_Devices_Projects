@@ -13,6 +13,16 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  // Lista para almacenar las reservas compartidas entre las páginas
+  List<Map<String, dynamic>> reservations = [];
+
+  // Función para cancelar una reserva desde ReservationsPage
+  void _cancelReservation(Map<String, dynamic> reservation) {
+    setState(() {
+      reservations.remove(reservation);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -78,10 +88,15 @@ class _HomePageState extends State<HomePage> {
         ),
         body: TabBarView(
           children: [
-            SoldaduraPage(),
+            // Pasar la lista de reservas a SoldaduraPage
+            SoldaduraPage(reservations: reservations),
             ComputerPage(),
             CncPage(),
-            ReservationsPage(),
+            // Pasar la lista de reservas y función de cancelación a ReservationsPage
+            ReservationsPage(
+              reservations: reservations,
+              onCancelReservation: _cancelReservation,
+            ),
             ProfilePage(),
           ],
         ),

@@ -39,7 +39,7 @@ class _LoginPageState extends State<LoginPage> {
       _showMessage('Correo electronico o contrasena incorrecta');
     } else {
       _showMessage('Bienvenido');
-      Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => const HomePage()));
+      Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) =>  HomePage()));
     }
   }
 
