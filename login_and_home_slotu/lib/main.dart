@@ -1,10 +1,14 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:login_and_home_slotu/pages/splash_page.dart';
+
 
 import 'firebase_options.dart';
 
 void main() async {
+
+  await Hive.initFlutter();
 
   runApp(const MyApp());
   await Firebase.initializeApp(
