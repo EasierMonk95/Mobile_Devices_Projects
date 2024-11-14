@@ -5,11 +5,12 @@ import 'package:login_and_home_slotu/pages/splash_page.dart';
 
 
 import 'firebase_options.dart';
+import 'models/event_model.dart';
 
 void main() async {
 
   await Hive.initFlutter();
-
+  Hive.registerAdapter(EventAdapter());
   runApp(const MyApp());
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,

@@ -116,7 +116,7 @@ class _SoldaduraPageState extends State<SoldaduraPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Agregar Evento"),
+          title: Text("Solicitar equipo"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
