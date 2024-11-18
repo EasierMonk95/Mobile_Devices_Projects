@@ -231,7 +231,9 @@ class _SoldaduraPageState extends State<SoldaduraPage> {
                             height: 50,
                             margin: EdgeInsets.all(2), // Más espacio entre las celdas
                             decoration: BoxDecoration(
-                              color: _isHoliday(_weekDays[dayIndex]) ? Colors.grey : Colors.green[900],
+                              color: _isHoliday(_weekDays[dayIndex]) ? Colors.grey :
+                                _isReserved(_weekDays[dayIndex], hours[hourIndex]) ? Colors.blue[700]
+                                : Colors.green[700],
                               borderRadius: BorderRadius.circular(6),
                               boxShadow: [
                                 BoxShadow(
