@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:login_and_home_slotu/models/api_calendarific_2024_response.dart';
 import 'package:login_and_home_slotu/repository/calendarific_api.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../models/event_model.dart';
 
@@ -53,10 +54,15 @@ class _SoldaduraPageState extends State<SoldaduraPage> {
     _weekDays = List.generate(7, (index) => startOfWeek.add(Duration(days: index)));
   }
 
-  void _changeWeek(int offset) {
+  void _changeWeek(int direction) {
+    DateTime today = DateTime.now(); // Fecha actual
+    DateTime startOfCurrentWeek = today.subtract(Duration(days: today.weekday - 1)); // Lunes de la semana actual
+    DateTime newStartOfWeek = _weekDays.first.add(Duration(days: direction * 7)); //Calculo semana actual
+    // Verificar si la nueva semana es antes de la semana actual
+    if (newStartOfWeek.isBefore(startOfCurrentWeek)) {return;}
+    // Actualizar las fechas de la semana actual
     setState(() {
-      _currentWeekOffset += offset;
-      _loadCurrentWeek();
+      _weekDays = List.generate(7, (index) => newStartOfWeek.add(Duration(days: index)));
     });
   }
 
@@ -74,11 +80,11 @@ class _SoldaduraPageState extends State<SoldaduraPage> {
 
   bool _isReserved(DateTime date, String hour) {
     return reservationBox.values.any((reservation) =>
-      reservation.date.year == date.year &&
-      reservation.date.month == date.month &&
-      reservation.date.day == date.day &&
-      reservation.hour == hour
-      );
+    reservation.date.year == date.year &&
+        reservation.date.month == date.month &&
+        reservation.date.day == date.day &&
+        reservation.hour == hour
+    );
   }
 
   void _showReservationDialog(BuildContext context, DateTime date, String hour) {
@@ -165,12 +171,16 @@ class _SoldaduraPageState extends State<SoldaduraPage> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Calendario de Soldadura"),
+        title: Text(
+          "Calendario de soldadura",
+          style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
+        ),
+        toolbarHeight: 68.0,
+        backgroundColor: Colors.lightGreen[50],
         actions: [
           IconButton(
             icon: Icon(Icons.arrow_back),
@@ -194,7 +204,7 @@ class _SoldaduraPageState extends State<SoldaduraPage> {
                   child: Text(
                     DateFormat('EEE\ndd/MM', 'es').format(day),
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: GoogleFonts.roboto(fontWeight: FontWeight.bold),
                   ),
                 ),
             ],
@@ -218,13 +228,22 @@ class _SoldaduraPageState extends State<SoldaduraPage> {
                             _onDayTap(_weekDays[dayIndex], hours[hourIndex]);
                           },
                           child: Container(
-                            height: 60,
-                            margin: EdgeInsets.all(2),
-                            color: _isHoliday(_weekDays[dayIndex]) ? Colors.red
-                                : _isReserved(_weekDays[dayIndex], hours[hourIndex]) ? Colors.blue
-                                : Colors.grey[300],
+                            height: 50,
+                            margin: EdgeInsets.all(2), // Más espacio entre las celdas
+                            decoration: BoxDecoration(
+                              color: _isHoliday(_weekDays[dayIndex]) ? Colors.grey : Colors.green[900],
+                              borderRadius: BorderRadius.circular(6),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 4,
+                                  offset: Offset(2, 2),
+                                ),
+                              ],
+                            ),
                             child: Center(child: Text("")),
                           ),
+
                         ),
                       ),
                   ],
@@ -237,7 +256,7 @@ class _SoldaduraPageState extends State<SoldaduraPage> {
     );
   }
 
-  // Método auxiliar para verificar si un día es festivo
+// Método auxiliar para verificar si un día es festivo
   bool _isHoliday(DateTime day) {
     return _holidays2024.any((holiday) =>
     holiday.year == day.year &&
