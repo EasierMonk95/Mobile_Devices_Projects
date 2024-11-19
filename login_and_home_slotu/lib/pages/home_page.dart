@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:login_and_home_slotu/pages/chat_page.dart';
 import 'package:login_and_home_slotu/pages/cnc_page.dart';
 import 'package:login_and_home_slotu/pages/computer_page.dart';
 import 'package:login_and_home_slotu/pages/profile_page.dart';
@@ -6,6 +7,7 @@ import 'package:login_and_home_slotu/pages/reservations_page.dart';
 import 'package:login_and_home_slotu/pages/soldadura_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'login_page.dart';
 
@@ -140,7 +142,8 @@ class _HomePageState extends State<HomePage> {
               reservations: reservations,
               onCancelReservation: _cancelReservation,
             ),
-            ProfilePage(),
+            //ProfilePage(),
+            ChatPage(),
           ],
         ),
       ),
