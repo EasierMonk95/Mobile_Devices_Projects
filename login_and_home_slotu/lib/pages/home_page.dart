@@ -76,12 +76,6 @@ class _HomePageState extends State<HomePage> {
                 if (value == 'logout') {
                   _logout();
                 }
-                else if (value == 'availability' && userRole == 'laboratorista') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AvailabilityPage()),
-                  );
-                }
                 else if (value == 'registerLab' && userRole == 'laboratorista') {
                   Navigator.push(
                     context,
@@ -92,10 +86,16 @@ class _HomePageState extends State<HomePage> {
                     setState(() {});
                   });
                 }
+                else if (value == 'availability' && userRole == 'laboratorista') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AvailabilityPage()),
+                  );
+                }
               },
               itemBuilder: (BuildContext context) {
                 return [
-                  if (userRole == 'laboratorista')
+                  if (userRole == 'laboratorista') ...[
                     PopupMenuItem<String>(
                       value: 'availability',
                       child: ListTile(
@@ -110,13 +110,14 @@ class _HomePageState extends State<HomePage> {
                         title: Text('Registrar laboratorista'),
                       ),
                     ),
-                    PopupMenuItem<String>(
-                      value: 'logout',
-                      child: ListTile(
-                        leading: Icon(Icons.logout, color: Colors.black),
-                        title: Text('Cerrar sesión'),
-                      ),
+                  ],
+                  PopupMenuItem<String>(
+                    value: 'logout',
+                    child: ListTile(
+                      leading: Icon(Icons.logout, color: Colors.black),
+                      title: Text('Cerrar sesión'),
                     ),
+                  ),
                 ];
               },
             ),
