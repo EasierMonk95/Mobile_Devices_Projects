@@ -85,7 +85,7 @@ class _CncPageState extends State<CncPage> {
 
   Future<bool> _isReserved(DateTime date, String hour) async {
     final snapshot = await FirebaseFirestore.instance
-        .collection('cnc_reservations')
+        .collection('soldadura_reservations')
         .where('date', isEqualTo: date)
         .where('hour', isEqualTo: hour)
         .where('user', isEqualTo: widget.userId)

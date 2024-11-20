@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:login_and_home_slotu/pages/registerlab_page.dart';
 import 'chat_page.dart';
 import 'cnc_page.dart';
 import 'computer_page.dart';
@@ -74,11 +75,22 @@ class _HomePageState extends State<HomePage> {
               onSelected: (value) {
                 if (value == 'logout') {
                   _logout();
-                } else if (value == 'availability' && userRole == 'laboratorista') {
+                }
+                else if (value == 'availability' && userRole == 'laboratorista') {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => AvailabilityPage()),
                   );
+                }
+                else if (value == 'registerLab') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RegisterUserPage(),
+                    ),
+                  ).then((_) {
+                    setState(() {});
+                  });
                 }
               },
               itemBuilder: (BuildContext context) {
@@ -91,13 +103,20 @@ class _HomePageState extends State<HomePage> {
                         title: Text('Configurar Disponibilidad'),
                       ),
                     ),
-                  PopupMenuItem<String>(
-                    value: 'logout',
-                    child: ListTile(
-                      leading: Icon(Icons.logout, color: Colors.black),
-                      title: Text('Cerrar sesión'),
+                    PopupMenuItem<String>(
+                      value: 'registerLab',
+                      child: ListTile(
+                        leading: Icon(Icons.person_add, color: Colors.black),
+                        title: Text('Registrar laboratorista'),
+                      ),
                     ),
-                  ),
+                    PopupMenuItem<String>(
+                      value: 'logout',
+                      child: ListTile(
+                        leading: Icon(Icons.logout, color: Colors.black),
+                        title: Text('Cerrar sesión'),
+                      ),
+                    ),
                 ];
               },
             ),

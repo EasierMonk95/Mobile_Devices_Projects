@@ -20,6 +20,7 @@ class _RegisterUserPageState extends State<RegisterUserPage> {
   final _repPassword = TextEditingController();
 
   bool _isPasswordObscure = true;
+  bool _isrepPasswordObscure = true;
 
   void _showMessage(String msg) {
     SnackBar snackBar = SnackBar(content: Text(msg));
@@ -100,13 +101,37 @@ class _RegisterUserPageState extends State<RegisterUserPage> {
                 const SizedBox(height: 24.0),
                 TextFormField(
                   controller: _name,
-                  decoration: const InputDecoration(labelText: "Digite su nombre"),
+                  decoration: InputDecoration(
+                    labelText: "Digite su nombre",
+                    labelStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                    filled: true,
+                    fillColor: const Color(0x4DFFFFFF), // Fondo del campo
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.white70),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16.0),
                 TextFormField(
                   controller: _email,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(labelText: "Digite su correo"),
+                  decoration: InputDecoration(
+                    labelText: "Digite su correo",
+                    labelStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                    filled: true,
+                    fillColor: const Color(0x4DFFFFFF), // Fondo del campo
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.white70),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16.0),
                 TextFormField(
@@ -114,8 +139,19 @@ class _RegisterUserPageState extends State<RegisterUserPage> {
                   obscureText: _isPasswordObscure,
                   decoration: InputDecoration(
                     labelText: "Digite su contraseña",
+                    labelStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                    filled: true,
+                    fillColor: const Color(0x4DFFFFFF), // Fondo del campo
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.white70),
+                    ),
                     suffixIcon: IconButton(
-                      icon: Icon(_isPasswordObscure ? Icons.visibility : Icons.visibility_off),
+                      icon: Icon(_isPasswordObscure ? Icons.visibility : Icons.visibility_off,
+                          color: Colors.white70), // Cambia el color del icono
                       onPressed: () {
                         setState(() {
                           _isPasswordObscure = !_isPasswordObscure;
@@ -127,8 +163,33 @@ class _RegisterUserPageState extends State<RegisterUserPage> {
                 const SizedBox(height: 16.0),
                 TextFormField(
                   controller: _repPassword,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: "Repita la contraseña"),
+                  obscureText: _isrepPasswordObscure,
+                  style: TextStyle(
+                    color: Colors.black, // Cambia el color a azul
+                    fontSize: 20,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: "Repita la contraseña",
+                    labelStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                    filled: true,
+                    fillColor: const Color(0x4DFFFFFF), // Fondo del campo
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.white70),
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(_isrepPasswordObscure ? Icons.visibility : Icons.visibility_off,
+                          color: Colors.white70), // Cambia el color del icono
+                      onPressed: () {
+                        setState(() {
+                          _isrepPasswordObscure = !_isrepPasswordObscure;
+                        });
+                      },
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16.0),
                 ElevatedButton(
