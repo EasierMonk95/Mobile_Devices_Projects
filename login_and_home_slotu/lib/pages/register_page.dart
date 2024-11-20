@@ -26,20 +26,15 @@ class _RegisterUserPageState extends State<RegisterUserPage> {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
-  Future<void> _saveUserToFirestore(String uid, String name, String email) async {
+  Future<void> _saveUserToFirestore(User user, String uid, String role) async {
     try {
-      await _firestore.collection('users').doc(uid).set({
-        'name': name,
-        'email': email,
-        'role': "normal", // Rol predeterminado para usuarios normales
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+      await _firestore.collection('users').doc(uid).set(user.toJson(role));
     } catch (e) {
       _showMessage('Error al guardar datos en Firestore: $e');
     }
   }
 
-  void _createUser(User user) async {
+  void _createUser(User user, String role) async {
     if (user.email.isNotEmpty && user.password.isNotEmpty) {
       try {
         String? result = await _firebaseApi.createUser(user.email, user.password);
@@ -64,7 +59,7 @@ class _RegisterUserPageState extends State<RegisterUserPage> {
             break;
           default:
             _showMessage('Usuario registrado con éxito');
-            await _saveUserToFirestore(result, user.name, user.email);
+            await _saveUserToFirestore(user, result, role);
             Navigator.pop(context);
         }
       } catch (e) {
@@ -81,12 +76,12 @@ class _RegisterUserPageState extends State<RegisterUserPage> {
     } else if (_password.text != _repPassword.text) {
       _showMessage("ERROR: Las contraseñas deben de ser iguales");
     } else {
-      var user = User(
-        _name.text,
-        _email.text,
-        _password.text,
+      var user = User.fromControllers(
+        nameController: _name,
+        emailController: _email,
+        passwordController: _password,
       );
-      _createUser(user);
+      _createUser(user, "normal");
     }
   }
 
