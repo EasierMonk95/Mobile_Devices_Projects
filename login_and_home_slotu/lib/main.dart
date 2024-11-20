@@ -1,21 +1,18 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:login_and_home_slotu/pages/splash_page.dart';
+import 'package:firebase_performance/firebase_performance.dart';
 
 
 import 'firebase_options.dart';
-import 'models/event_model.dart';
 
 void main() async {
 
-  await Hive.initFlutter();
-  Hive.registerAdapter(EventAdapter());
-  await Hive.openBox<Event>('reservations');
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
