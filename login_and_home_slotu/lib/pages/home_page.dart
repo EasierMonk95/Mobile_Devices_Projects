@@ -82,7 +82,7 @@ class _HomePageState extends State<HomePage> {
                     MaterialPageRoute(builder: (context) => AvailabilityPage()),
                   );
                 }
-                else if (value == 'registerLab') {
+                else if (value == 'registerLab' && userRole == 'laboratorista') {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
