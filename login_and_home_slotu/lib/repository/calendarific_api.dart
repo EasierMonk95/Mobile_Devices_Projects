@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 class CalendarificApi2024 {
   Future<List<DateTime>> getHolidayDates2024() async {
     final response = await http.get(
-        Uri.parse('https://calendarific.com/api/v2/holidays?&api_key=9gMbnsL1QGCg1MCz79JIsqxhN2RorEKT&country=CO&year=2024')
+        Uri.parse('https://calendarific.com/api/v2/holidays?&api_key=xYFapUYWHekI6BAadt0yZ6cxjgSQ7YNM&country=CO&year=2024')
     );
 
     print('Respuesta completa de la API: ${response.body}'); // Muestra la respuesta de la API
@@ -34,7 +34,7 @@ class CalendarificApi2024 {
 class CalendarificApi2025 {
   Future<List<DateTime>> getHolidayDates2025() async {
     final response = await http.get(
-        Uri.parse('https://calendarific.com/api/v2/holidays?&api_key=9gMbnsL1QGCg1MCz79JIsqxhN2RorEKT&country=CO&year=2025')
+        Uri.parse('https://calendarific.com/api/v2/holidays?&api_key=xYFapUYWHekI6BAadt0yZ6cxjgSQ7YNM&country=CO&year=2025')
     );
 
     print('Respuesta completa de la API: ${response.body}'); // Muestra la respuesta de la API
