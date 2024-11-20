@@ -31,7 +31,7 @@ class _RegisterUserPageState extends State<RegisterUserPage> {
       await _firestore.collection('users').doc(uid).set({
         'name': name,
         'email': email,
-        'role': "normal", // Rol predeterminado para usuarios normales
+        'role': "laboratorista", // Rol para los laboratoristas
         'createdAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {

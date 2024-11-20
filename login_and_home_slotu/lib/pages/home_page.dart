@@ -8,6 +8,7 @@ import 'package:login_and_home_slotu/pages/soldadura_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:login_and_home_slotu/pages/registerlab_page.dart';
 
 import 'login_page.dart';
 
@@ -19,39 +20,59 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // Lista para almacenar las reservas compartidas entre las páginas
   List<Map<String, dynamic>> reservations = [];
+  String currentUserRole = 'normal'; // Rol por defecto.
 
-  // Función para cancelar una reserva desde ReservationsPage
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserRole();
+  }
+
+  void _fetchUserRole() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final userData = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      setState(() {
+        currentUserRole = userData['role'] ?? 'normal'; // Rol por defecto.
+      });
+    }
+  }
+
   void _cancelReservation(Map<String, dynamic> reservation) {
     setState(() {
       reservations.remove(reservation);
     });
   }
 
-  // Función para cerrar sesión
   void _logout() {
     FirebaseAuth.instance.signOut();
     Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const LoginPage(),
-        ));
+      context,
+      MaterialPageRoute(
+        builder: (context) => const LoginPage(),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 5, // Número de pestañas
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-              'Home',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.white)),
-          backgroundColor: Color(0xFF004B28),
+            'Home',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: const Color(0xFF004B28),
           iconTheme: const IconThemeData(
             color: Colors.white,
           ),
@@ -60,10 +81,19 @@ class _HomePageState extends State<HomePage> {
               onSelected: (value) {
                 if (value == 'logout') {
                   _logout();
+                } else if (value == 'registerLab') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RegisterUserPage(),
+                    ),
+                  ).then((_) {
+                    setState(() {});
+                  });
                 }
               },
               itemBuilder: (BuildContext context) {
-                return [
+                List<PopupMenuEntry<String>> menuItems = [
                   PopupMenuItem<String>(
                     value: 'logout',
                     child: ListTile(
@@ -72,10 +102,23 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ];
+
+                if (currentUserRole == 'laboratorista') {
+                  menuItems.add(
+                    PopupMenuItem<String>(
+                      value: 'registerLab',
+                      child: ListTile(
+                        leading: Icon(Icons.person_add, color: Colors.black),
+                        title: Text('Registrar laboratorista'),
+                      ),
+                    ),
+                  );
+                }
+
+                return menuItems;
               },
             ),
           ],
-
           bottom: const TabBar(
             tabs: [
               Tab(
@@ -84,7 +127,7 @@ class _HomePageState extends State<HomePage> {
                   'Soldadura',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 10, // Tamaño de fuente más pequeño
+                    fontSize: 10,
                   ),
                 ),
               ),
@@ -94,7 +137,7 @@ class _HomePageState extends State<HomePage> {
                   'Comput.',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 10, // Tamaño de fuente más pequeño
+                    fontSize: 10,
                   ),
                 ),
               ),
@@ -104,7 +147,7 @@ class _HomePageState extends State<HomePage> {
                   'CNC',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 10, // Tamaño de fuente más pequeño
+                    fontSize: 10,
                   ),
                 ),
               ),
@@ -114,7 +157,7 @@ class _HomePageState extends State<HomePage> {
                   'Reservas',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 10, // Tamaño de fuente más pequeño
+                    fontSize: 10,
                   ),
                 ),
               ),
@@ -124,7 +167,7 @@ class _HomePageState extends State<HomePage> {
                   'Foro',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 10, // Tamaño de fuente más pequeño
+                    fontSize: 10,
                   ),
                 ),
               ),
@@ -133,16 +176,13 @@ class _HomePageState extends State<HomePage> {
         ),
         body: TabBarView(
           children: [
-            // Pasar la lista de reservas a SoldaduraPage
             SoldaduraPage(reservations: reservations),
             ComputerPage(reservations: reservations),
             CncPage(reservations: reservations),
-            // Pasar la lista de reservas y función de cancelación a ReservationsPage
             ReservationsPage(
               reservations: reservations,
               onCancelReservation: _cancelReservation,
             ),
-            //ProfilePage(),
             ChatPage(),
           ],
         ),
