@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:login_and_home_slotu/models/api_calendarific_2024_response.dart';
 import 'package:login_and_home_slotu/repository/calendarific_api.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../models/event_model.dart';
-
 class CncPage extends StatefulWidget {
-  final List<Map<String, dynamic>> reservations;
+  final String userId;
 
-  CncPage({Key? key, required this.reservations}) : super(key: key);
+  CncPage({required this.userId});
 
   @override
   _CncPageState createState() => _CncPageState();
@@ -22,19 +19,21 @@ class _CncPageState extends State<CncPage> {
   List<DateTime> _holidays2024 = [];
   List<DateTime> _holidays2025 = [];
   int _currentWeekOffset = 0;
+  int availableSlots = 3;
+  bool? canReserve;
 
   final List<String> hours = [
     "8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00",
     "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"
   ];
 
-  Box<Event> reservationBox = Hive.box<Event>('reservations');
-
   @override
   void initState() {
     super.initState();
     initializeDateFormatting('es');
     _loadCurrentWeek();
+    _loadAvailableSlots();
+    _loadUserRole();
     _loadHolidays();
   }
 
@@ -48,6 +47,25 @@ class _CncPageState extends State<CncPage> {
     }
   }
 
+  void _loadAvailableSlots() async {
+    final doc = await FirebaseFirestore.instance.collection('settings').doc('cnc').get();
+    if (doc.exists) {
+      setState(() {
+        availableSlots = doc.data()?['availableSlots'] ?? 0;
+      });
+    }
+  }
+
+  void _loadUserRole() async {
+    final doc = await FirebaseFirestore.instance.collection('users').doc(widget.userId).get();
+    if (doc.exists) {
+      String role = doc.data()?['role'] ?? 'normal';
+      setState(() {
+        canReserve = (role == 'normal');
+      });
+    }
+  }
+
   void _loadCurrentWeek() {
     DateTime now = DateTime.now();
     DateTime startOfWeek = now.subtract(Duration(days: now.weekday - 1)).add(Duration(days: 7 * _currentWeekOffset));
@@ -55,36 +73,49 @@ class _CncPageState extends State<CncPage> {
   }
 
   void _changeWeek(int direction) {
-    DateTime today = DateTime.now(); // Fecha actual
+    DateTime today = DateTime.now();
     DateTime startOfCurrentWeek = today.subtract(Duration(days: today.weekday - 1)); // Lunes de la semana actual
-    DateTime newStartOfWeek = _weekDays.first.add(Duration(days: direction * 7)); //Calculo semana actual
-    // Verificar si la nueva semana es antes de la semana actual
-    if (newStartOfWeek.isBefore(startOfCurrentWeek)) {return;}
-    // Actualizar las fechas de la semana actual
+    DateTime newStartOfWeek = _weekDays.first.add(Duration(days: direction * 7));
+    if (newStartOfWeek.isBefore(startOfCurrentWeek)) return;
     setState(() {
-      _weekDays = List.generate(7, (index) => newStartOfWeek.add(Duration(days: index)));
+      _currentWeekOffset += direction;
+      _loadCurrentWeek();
     });
   }
 
-  void _onDayTap(DateTime date, String hour) {
-    if (_isHoliday(date)) {
-      _showHolidayNotification(date);
-    } else if (_isReserved(date, hour)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Este horario ya está reservado.")),
-      );
-    } else {
-      _showReservationDialog(context, date, hour);
-    }
+  Future<bool> _isReserved(DateTime date, String hour) async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('cnc_reservations')
+        .where('date', isEqualTo: date)
+        .where('hour', isEqualTo: hour)
+        .where('user', isEqualTo: widget.userId)
+        .get();
+    return snapshot.docs.isNotEmpty;
   }
 
-  bool _isReserved(DateTime date, String hour) {
-    return reservationBox.values.any((reservation) =>
-    reservation.date.year == date.year &&
-        reservation.date.month == date.month &&
-        reservation.date.day == date.day &&
-        reservation.hour == hour
-    );
+  void _onDayTap(DateTime date, String hour) async {
+    if (canReserve == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Cargando datos del usuario...")));
+      return;
+    }
+
+    if (!canReserve!) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("No tienes permiso para hacer reservas.")));
+      return;
+    }
+
+    if (await _isReserved(date, hour)) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Ya tienes una reserva para este horario.")));
+      return;
+    }
+
+    if (_isHoliday(date)) {
+      _showHolidayNotification(date);
+    } else if (availableSlots > 0) {
+      _showReservationDialog(context, date, hour);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("No hay equipos disponibles.")));
+    }
   }
 
   void _showReservationDialog(BuildContext context, DateTime date, String hour) {
@@ -103,17 +134,22 @@ class _CncPageState extends State<CncPage> {
           actions: [
             TextButton(
               child: Text("No"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
             ),
             TextButton(
               child: Text("Sí"),
-              onPressed: () {
-                setState(() {
-                  reservationBox.add(Event(date: date, hour: hour));
-                });
+              onPressed: () async {
+                setState(() => availableSlots--);
                 Navigator.of(context).pop();
+                await FirebaseFirestore.instance.collection('soldadura_reservations').add({
+                  'date': date,
+                  'hour': hour,
+                  'user': widget.userId,
+                  'type': 'cnc', // Agregamos el tipo de reserva
+                });
+                await FirebaseFirestore.instance.collection('settings').doc('cnc').update({
+                  'availableSlots': FieldValue.increment(-1),
+                });
               },
             ),
           ],
@@ -171,16 +207,21 @@ class _CncPageState extends State<CncPage> {
     );
   }
 
+  bool _isHoliday(DateTime date) {
+    return _holidays2024.any((holiday) => holiday.year == date.year && holiday.month == date.month && holiday.day == date.day) ||
+        _holidays2025.any((holiday) => holiday.year == date.year && holiday.month == date.month && holiday.day == date.day);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-            "Calendario de CNC",
-            style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
+          "Calendario de CNC",
+          style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         toolbarHeight: 68.0,
-        backgroundColor: Colors.lightGreen[50],
+        backgroundColor: Colors.green[600],
         actions: [
           IconButton(
             icon: Icon(Icons.arrow_back),
@@ -196,9 +237,7 @@ class _CncPageState extends State<CncPage> {
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text(""), // Espacio vacío para la columna de horas
-              ),
+              Expanded(child: Text("")), // Espacio vacío para las horas
               for (DateTime day in _weekDays)
                 Expanded(
                   child: Text(
@@ -215,20 +254,13 @@ class _CncPageState extends State<CncPage> {
               itemBuilder: (context, hourIndex) {
                 return Row(
                   children: [
-                    Expanded(
-                      child: Text(
-                        hours[hourIndex],
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
+                    Expanded(child: Text(hours[hourIndex], textAlign: TextAlign.center)),
                     for (int dayIndex = 0; dayIndex < 7; dayIndex++)
                       Expanded(
                         child: InkWell(
-                          onTap: () {
-                            _onDayTap(_weekDays[dayIndex], hours[hourIndex]);
-                          },
+                          onTap: () => _onDayTap(_weekDays[dayIndex], hours[hourIndex]),
                           child: Container(
-                            height: 50,
+                            height: 50.0,
                             margin: EdgeInsets.all(2), // Más espacio entre las celdas
                             decoration: BoxDecoration(
                               color: _isHoliday(_weekDays[dayIndex]) ? Colors.grey : Colors.green[900],
@@ -243,7 +275,6 @@ class _CncPageState extends State<CncPage> {
                             ),
                             child: Center(child: Text("")),
                           ),
-
                         ),
                       ),
                   ],
@@ -254,17 +285,5 @@ class _CncPageState extends State<CncPage> {
         ],
       ),
     );
-  }
-
-// Método auxiliar para verificar si un día es festivo
-  bool _isHoliday(DateTime day) {
-    return _holidays2024.any((holiday) =>
-    holiday.year == day.year &&
-        holiday.month == day.month &&
-        holiday.day == day.day) ||
-        _holidays2025.any((holiday) =>
-        holiday.year == day.year &&
-            holiday.month == day.month &&
-            holiday.day == day.day);
   }
 }
