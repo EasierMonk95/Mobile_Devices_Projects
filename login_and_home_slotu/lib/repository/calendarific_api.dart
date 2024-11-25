@@ -16,7 +16,7 @@ class CalendarificApi2024 {
       await metric.start();
 
       final Uri url = Uri.parse(
-        'https://calendarific.com/api/v2/holidays?&api_key=xYFapUYWHekI6BAadt0yZ6cxjgSQ7YNM&country=CO&year=2024',
+        'https://calendarific.com/api/v2/holidays?&api_key=mxVYS4nKTqS5TYJd8miRcNZBCUqkQy1a&country=CO&year=2024',
       );
       final response = await http.get(url);
 
@@ -69,7 +69,7 @@ class CalendarificApi2025 {
       await metric.start();
 
       final Uri url = Uri.parse(
-        'https://calendarific.com/api/v2/holidays?&api_key=xYFapUYWHekI6BAadt0yZ6cxjgSQ7YNM&country=CO&year=2025',
+        'https://calendarific.com/api/v2/holidays?&api_key=mxVYS4nKTqS5TYJd8miRcNZBCUqkQy1a&country=CO&year=2025',
       );
       final response = await http.get(url);
 
