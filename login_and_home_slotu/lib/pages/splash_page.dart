@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:login_and_home_slotu/pages/login_page.dart';
-
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -10,16 +10,26 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
-  Future<void> _closesplah() async{
-    await Future.delayed(const Duration(seconds:3),() async{
+  Future<void> _closesplah() async {
+    await Future.delayed(const Duration(seconds: 3), () async {
+
+      // Aquí forzamos un error intencional
+      try {
+        throw Exception("Error intencional desde SplashPage");
+      } catch (e, stackTrace) {
+        // Registra el error en Crashlytics
+        FirebaseCrashlytics.instance.recordError(e, stackTrace);
+      }
+
       Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginPage()));
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
     });
   }
 
   @override
-  void initState(){
+  void initState() {
     _closesplah();
     super.initState();
   }
@@ -28,14 +38,16 @@ class _SplashPageState extends State<SplashPage> {
   Widget build(BuildContext context) {
     return const Scaffold(
       backgroundColor: Color(0xFF004B28),
-      body:Center(
-        child:Image(
+      body: Center(
+        child: Image(
           image: AssetImage('assets/images/USlotLogo.png'),
-          width: 150,  // Cambia el ancho según tus necesidades
-          height: 150, // Cambia la altura según tus necesidades
+          width: 150,
+          height: 150,
           fit: BoxFit.cover,
         ),
       ),
     );
   }
 }
+
+
