@@ -85,7 +85,7 @@ class _CncPageState extends State<CncPage> {
 
   Future<bool> _isReserved(DateTime date, String hour) async {
     final snapshot = await FirebaseFirestore.instance
-        .collection('soldadura_reservations')
+        .collection('reservations')
         .where('date', isEqualTo: date)
         .where('hour', isEqualTo: hour)
         .where('user', isEqualTo: widget.userId)
@@ -111,14 +111,20 @@ class _CncPageState extends State<CncPage> {
 
     if (_isHoliday(date)) {
       _showHolidayNotification(date);
-    } else if (availableSlots > 0) {
-      _showReservationDialog(context, date, hour);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("No hay equipos disponibles.")));
+      final doc = await FirebaseFirestore.instance.collection('cnc').doc(DateFormat('yyyy-MM-dd').format(date)).get();
+      final slots = doc.data()?['slots'] ?? [];
+      final slot = slots.firstWhere((s) => s['hour'] == hour, orElse: () => null);
+
+      if (slot != null && slot['availableSlots'] > 0) {
+        _showReservationDialog(context, date, hour, slots, slot);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("No hay equipos disponibles.")));
+      }
     }
   }
 
-  void _showReservationDialog(BuildContext context, DateTime date, String hour) {
+  void _showReservationDialog(BuildContext context, DateTime date, String hour, List slots, Map slot) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -139,17 +145,23 @@ class _CncPageState extends State<CncPage> {
             TextButton(
               child: Text("Sí"),
               onPressed: () async {
-                setState(() => availableSlots--);
-                Navigator.of(context).pop();
-                await FirebaseFirestore.instance.collection('soldadura_reservations').add({
+                slot['availableSlots']--;
+                slots[slots.indexWhere((s) => s['hour'] == hour)] = slot;
+
+                await FirebaseFirestore.instance
+                    .collection('cnc')
+                    .doc(DateFormat('yyyy-MM-dd').format(date))
+                    .update({'slots': slots});
+
+                await FirebaseFirestore.instance.collection('reservations').add({
                   'date': date,
                   'hour': hour,
                   'user': widget.userId,
-                  'type': 'cnc', // Agregamos el tipo de reserva
+                  'type': 'cnc',
                 });
-                await FirebaseFirestore.instance.collection('settings').doc('cnc').update({
-                  'availableSlots': FieldValue.increment(-1),
-                });
+
+                setState(() {});
+                Navigator.of(context).pop();
               },
             ),
           ],
@@ -157,6 +169,7 @@ class _CncPageState extends State<CncPage> {
       },
     );
   }
+
 
   void _showHolidayNotification(DateTime date) {
     showDialog(
@@ -221,7 +234,7 @@ class _CncPageState extends State<CncPage> {
           style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         toolbarHeight: 68.0,
-        backgroundColor: Colors.green[600],
+        backgroundColor: Colors.green[500],
         actions: [
           IconButton(
             icon: Icon(Icons.arrow_back),
@@ -257,24 +270,94 @@ class _CncPageState extends State<CncPage> {
                     Expanded(child: Text(hours[hourIndex], textAlign: TextAlign.center)),
                     for (int dayIndex = 0; dayIndex < 7; dayIndex++)
                       Expanded(
-                        child: InkWell(
-                          onTap: () => _onDayTap(_weekDays[dayIndex], hours[hourIndex]),
-                          child: Container(
-                            height: 50.0,
-                            margin: EdgeInsets.all(2), // Más espacio entre las celdas
-                            decoration: BoxDecoration(
-                              color: _isHoliday(_weekDays[dayIndex]) ? Colors.grey : Colors.green[900],
-                              borderRadius: BorderRadius.circular(6),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 4,
-                                  offset: Offset(2, 2),
+                        child: FutureBuilder<DocumentSnapshot>(
+                          future: FirebaseFirestore.instance
+                              .collection('cnc')
+                              .doc(DateFormat('yyyy-MM-dd').format(_weekDays[dayIndex]))
+                              .get(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return Container(
+                                height: 50.0,
+                                margin: EdgeInsets.all(2),
+                                color: Colors.grey[200],
+                              );
+                            }
+
+                            if (snapshot.hasError) {
+                              return Container(
+                                height: 50.0,
+                                margin: EdgeInsets.all(2),
+                                color: Colors.red[300],
+                                child: Center(
+                                  child: Icon(Icons.error, color: Colors.white),
                                 ),
-                              ],
-                            ),
-                            child: Center(child: Text("")),
-                          ),
+                              );
+                            }
+
+                            if (!snapshot.hasData || !snapshot.data!.exists) {
+                              return Container(
+                                height: 50.0,
+                                margin: EdgeInsets.all(2),
+                                color: Colors.grey,
+                              );
+                            }
+
+                            final data = snapshot.data!.data() as Map<String, dynamic>;
+                            final slots = data['slots'] ?? [];
+                            final slot = slots.firstWhere(
+                                  (s) => s['hour'] == hours[hourIndex],
+                              orElse: () => null,
+                            );
+
+                            if (slot == null) {
+                              return Container(
+                                height: 50.0,
+                                margin: EdgeInsets.all(2),
+                                color: Colors.grey,
+                              );
+                            }
+
+                            final int available = slot['availableSlots'] ?? 0;
+
+                            return InkWell(
+                              onTap: available > 0
+                                  ? () => _onDayTap(_weekDays[dayIndex], hours[hourIndex])
+                                  : () => ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("No hay equipos disponibles")),
+                              ),
+                              child: Container(
+                                height: 50.0,
+                                margin: EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: _isHoliday(_weekDays[dayIndex])
+                                      ? Colors.grey
+                                      : (available > 0 ? Colors.green[900] : Colors.red),
+                                  borderRadius: BorderRadius.circular(6),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 4,
+                                      offset: Offset(2, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    available > 0
+                                        ? "$available equipos"  // Mostrar la cantidad de equipos si hay disponibilidad
+                                        : "Sin equipos",         // Mostrar "Sin equipos" si no hay disponibilidad
+                                    textAlign: TextAlign.center, // Asegura que el texto se centre horizontalmente
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold, // Resalta el texto para mayor visibilidad
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                   ],

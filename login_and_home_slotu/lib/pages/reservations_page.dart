@@ -8,7 +8,7 @@ class ReservationsPage extends StatelessWidget {
 
   ReservationsPage({Key? key, required this.userId}) : super(key: key);
 
-  void _showCancelDialog(BuildContext context, String reservationId, String type) {
+  void _showCancelDialog(BuildContext context, String reservationId, String type, DateTime date, String hour) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -23,10 +23,21 @@ class ReservationsPage extends StatelessWidget {
               child: Text("Sí"),
               onPressed: () async {
                 Navigator.of(context).pop();
-                await FirebaseFirestore.instance.collection('soldadura_reservations').doc(reservationId).delete();
-                await FirebaseFirestore.instance.collection('settings').doc(type).update({
-                  'availableSlots': FieldValue.increment(1),
-                });
+
+                final doc = await FirebaseFirestore.instance.collection(type).doc(DateFormat('yyyy-MM-dd').format(date)).get();
+                final slots = doc.data()?['slots'] ?? [];
+                final slot = slots.firstWhere((s) => s['hour'] == hour, orElse: () => null);
+
+                if (slot != null) {
+                  slot['availableSlots']++;
+                  slots[slots.indexWhere((s) => s['hour'] == hour)] = slot;
+
+                  await FirebaseFirestore.instance.collection(type).doc(DateFormat('yyyy-MM-dd').format(date)).update({
+                    'slots': slots,
+                  });
+                }
+
+                await FirebaseFirestore.instance.collection('reservations').doc(reservationId).delete();
               },
             ),
           ],
@@ -34,6 +45,7 @@ class ReservationsPage extends StatelessWidget {
       },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +57,7 @@ class ReservationsPage extends StatelessWidget {
       ),
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
-            .collection('soldadura_reservations')
+            .collection('reservations')
             .where('user', isEqualTo: userId)
             .snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -68,7 +80,7 @@ class ReservationsPage extends StatelessWidget {
                       "$typeDescription - Fecha: ${DateFormat('EEE, dd MMM', 'es').format(date)} - Hora: ${doc['hour']}",
                       style: TextStyle(color: Colors.black), // Ensure title text is readable on all backgrounds
                     ),
-                    onTap: () => _showCancelDialog(context, doc.id, type),
+                    onTap: () => _showCancelDialog(context, doc.id, type, date, "${doc['hour']}"),
                   ),
                 ),
               );

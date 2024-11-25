@@ -4,6 +4,7 @@ import 'package:login_and_home_slotu/pages/register_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../repository/firebase_api.dart';
 
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -17,7 +18,30 @@ class _LoginPageState extends State<LoginPage> {
 
   final FirebaseApi _firebaseApi = FirebaseApi();
 
+  String? _logoUrl;
+
   bool _isPasswordObscure = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLogo();
+  }
+
+  Future<void> _loadLogo() async {
+    try {
+      String? url = await _firebaseApi.getImageUrl('images/USlotLogo.png');
+      if (url != null) {
+        setState(() {
+          _logoUrl = url;
+        });
+      } else {
+        print('La URL no fue encontrada.');
+      }
+    } catch (e) {
+      print('Error al cargar el logo: $e');
+    }
+  }
 
   void _showMessage(String msg) {
     SnackBar snackBar = SnackBar(content: Text(msg));
@@ -53,8 +77,10 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Image(
-                  image: AssetImage('assets/images/USlotLogo.png'),
+                _logoUrl == null
+                    ? const CircularProgressIndicator() // Mostrar indicador mientras carga
+                    : Image.network(
+                  _logoUrl!,
                   width: 100,
                   height: 100,
                   fit: BoxFit.cover,

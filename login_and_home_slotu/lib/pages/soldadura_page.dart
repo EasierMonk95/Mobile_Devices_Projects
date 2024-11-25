@@ -35,7 +35,34 @@ class _SoldaduraPageState extends State<SoldaduraPage> {
     _loadAvailableSlots();
     _loadUserRole();
     _loadHolidays();
+    //initializeAvailability();
   }
+
+  /*void initializeAvailability() async {
+    DateTime startDate = DateTime(2024, 11, 25);
+    DateTime endDate = DateTime(2025, 12, 31);
+
+    CollectionReference availabilityCollection =
+    FirebaseFirestore.instance.collection('computer');
+
+    List<String> hours = [
+      "8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00",
+      "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"
+    ];
+
+    while (startDate.isBefore(endDate.add(Duration(days: 1)))) {
+      String dateKey = DateFormat('yyyy-MM-dd').format(startDate);
+      List<Map<String, dynamic>> hourlySlots = hours.map((hour) {
+        return {'hour': hour, 'availableSlots': 3}; // Cambiar 3 por el valor predeterminado.
+      }).toList();
+
+      await availabilityCollection.doc(dateKey).set({'slots': hourlySlots});
+
+      startDate = startDate.add(Duration(days: 1));
+    }
+
+    print("Disponibilidad inicializada con éxito.");
+  }*/
 
   void _loadHolidays() async {
     try {
@@ -85,7 +112,7 @@ class _SoldaduraPageState extends State<SoldaduraPage> {
 
   Future<bool> _isReserved(DateTime date, String hour) async {
     final snapshot = await FirebaseFirestore.instance
-        .collection('soldadura_reservations')
+        .collection('reservations')
         .where('date', isEqualTo: date)
         .where('hour', isEqualTo: hour)
         .where('user', isEqualTo: widget.userId)
@@ -111,14 +138,20 @@ class _SoldaduraPageState extends State<SoldaduraPage> {
 
     if (_isHoliday(date)) {
       _showHolidayNotification(date);
-    } else if (availableSlots > 0) {
-      _showReservationDialog(context, date, hour);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("No hay equipos disponibles.")));
+      final doc = await FirebaseFirestore.instance.collection('soldadura').doc(DateFormat('yyyy-MM-dd').format(date)).get();
+      final slots = doc.data()?['slots'] ?? [];
+      final slot = slots.firstWhere((s) => s['hour'] == hour, orElse: () => null);
+
+      if (slot != null && slot['availableSlots'] > 0) {
+        _showReservationDialog(context, date, hour, slots, slot);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("No hay equipos disponibles.")));
+      }
     }
   }
 
-  void _showReservationDialog(BuildContext context, DateTime date, String hour) {
+  void _showReservationDialog(BuildContext context, DateTime date, String hour, List slots, Map slot) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -139,17 +172,23 @@ class _SoldaduraPageState extends State<SoldaduraPage> {
             TextButton(
               child: Text("Sí"),
               onPressed: () async {
-                setState(() => availableSlots--);
-                Navigator.of(context).pop();
-                await FirebaseFirestore.instance.collection('soldadura_reservations').add({
+                slot['availableSlots']--;
+                slots[slots.indexWhere((s) => s['hour'] == hour)] = slot;
+
+                await FirebaseFirestore.instance
+                    .collection('soldadura')
+                    .doc(DateFormat('yyyy-MM-dd').format(date))
+                    .update({'slots': slots});
+
+                await FirebaseFirestore.instance.collection('reservations').add({
                   'date': date,
                   'hour': hour,
                   'user': widget.userId,
-                  'type': 'soldadura', // Agregamos el tipo de reserva
+                  'type': 'soldadura',
                 });
-                await FirebaseFirestore.instance.collection('settings').doc('soldadura').update({
-                  'availableSlots': FieldValue.increment(-1),
-                });
+
+                setState(() {});
+                Navigator.of(context).pop();
               },
             ),
           ],
@@ -257,24 +296,94 @@ class _SoldaduraPageState extends State<SoldaduraPage> {
                     Expanded(child: Text(hours[hourIndex], textAlign: TextAlign.center)),
                     for (int dayIndex = 0; dayIndex < 7; dayIndex++)
                       Expanded(
-                        child: InkWell(
-                          onTap: () => _onDayTap(_weekDays[dayIndex], hours[hourIndex]),
-                          child: Container(
-                            height: 50.0,
-                            margin: EdgeInsets.all(2), // Más espacio entre las celdas
-                            decoration: BoxDecoration(
-                              color: _isHoliday(_weekDays[dayIndex]) ? Colors.grey : Colors.green[900],
-                              borderRadius: BorderRadius.circular(6),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 4,
-                                  offset: Offset(2, 2),
+                        child: FutureBuilder<DocumentSnapshot>(
+                          future: FirebaseFirestore.instance
+                              .collection('soldadura')
+                              .doc(DateFormat('yyyy-MM-dd').format(_weekDays[dayIndex]))
+                              .get(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return Container(
+                                height: 50.0,
+                                margin: EdgeInsets.all(2),
+                                color: Colors.grey[200],
+                              );
+                            }
+
+                            if (snapshot.hasError) {
+                              return Container(
+                                height: 50.0,
+                                margin: EdgeInsets.all(2),
+                                color: Colors.red[300],
+                                child: Center(
+                                  child: Icon(Icons.error, color: Colors.white),
                                 ),
-                              ],
-                            ),
-                            child: Center(child: Text("")),
-                          ),
+                              );
+                            }
+
+                            if (!snapshot.hasData || !snapshot.data!.exists) {
+                              return Container(
+                                height: 50.0,
+                                margin: EdgeInsets.all(2),
+                                color: Colors.grey,
+                              );
+                            }
+
+                            final data = snapshot.data!.data() as Map<String, dynamic>;
+                            final slots = data['slots'] ?? [];
+                            final slot = slots.firstWhere(
+                                  (s) => s['hour'] == hours[hourIndex],
+                              orElse: () => null,
+                            );
+
+                            if (slot == null) {
+                              return Container(
+                                height: 50.0,
+                                margin: EdgeInsets.all(2),
+                                color: Colors.grey,
+                              );
+                            }
+
+                            final int available = slot['availableSlots'] ?? 0;
+
+                            return InkWell(
+                              onTap: available > 0
+                                  ? () => _onDayTap(_weekDays[dayIndex], hours[hourIndex])
+                                  : () => ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("No hay equipos disponibles")),
+                              ),
+                              child: Container(
+                                height: 50.0,
+                                margin: EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: _isHoliday(_weekDays[dayIndex])
+                                      ? Colors.grey
+                                      : (available > 0 ? Colors.green[900] : Colors.red),
+                                  borderRadius: BorderRadius.circular(6),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 4,
+                                      offset: Offset(2, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    available > 0
+                                        ? "$available equipos"  // Mostrar la cantidad de equipos si hay disponibilidad
+                                        : "Sin equipos",         // Mostrar "Sin equipos" si no hay disponibilidad
+                                    textAlign: TextAlign.center, // Asegura que el texto se centre horizontalmente
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold, // Resalta el texto para mayor visibilidad
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                   ],
